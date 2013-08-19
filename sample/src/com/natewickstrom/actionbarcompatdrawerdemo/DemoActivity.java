@@ -4,27 +4,25 @@ import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuItem;
 import com.natewickstrom.actionbarcompatdrawer.ActionBarDrawerToggleCompat;
+import com.natewickstrom.actionbarcompatdrawerdemo.listener.MyListener;
 
 import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.content.res.Configuration;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
 
-public class DemoActivity extends SherlockFragmentActivity 
-		implements AdapterView.OnItemClickListener {
+public class DemoActivity extends SherlockFragmentActivity implements MyListener {
 
 	private DrawerLayout mDrawerLayout;
-    private ListView mDrawerList;
     private CharSequence mDrawerTitle;
     private CharSequence mTitle;
     private ActionBarDrawerToggleCompat mDrawerToggle;
-
-    private String[] mCityNames;
-	
+	private HomeFragment mHomeFragment;
+	private DrawerFragment mDrawerFragment;
+    
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,15 +31,33 @@ public class DemoActivity extends SherlockFragmentActivity
         
         mTitle = getTitle();
         mDrawerTitle = this.getString(R.string.drawer_open);
-        mCityNames = getResources().getStringArray(R.array.drawer_items);
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        mDrawerList = (ListView) findViewById(R.id.left_drawer);
-        // set a custom shadow that overlays the main content when the drawer opens
-        mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
-        // set up the drawer's list view with items and click listener
-        mDrawerList.setAdapter(new ArrayAdapter<String>(this,
-                R.layout.drawer_list_item, mCityNames));
-        mDrawerList.setOnItemClickListener(this);  
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout); 
+        
+        FragmentManager fm = getSupportFragmentManager();
+		FragmentTransaction ft = fm.beginTransaction();
+
+		mDrawerFragment = (DrawerFragment) fm.findFragmentByTag("Drawer");
+		mHomeFragment = (HomeFragment) fm.findFragmentByTag("Home");
+		
+		if (mDrawerFragment == null) {
+			mDrawerFragment = new DrawerFragment();	
+			ft.add(R.id.left_drawer, mDrawerFragment, "Drawer");
+		} else {
+			ft.show(mDrawerFragment);
+		}
+		
+		if (mHomeFragment == null) {
+			mHomeFragment = new HomeFragment();	
+			ft.add(R.id.fragment_holder, mHomeFragment, "Home");
+		} else {
+			ft.show(mHomeFragment);
+		}		
+		
+		ft.commit();   
+		
+		// set a custom shadow that overlays the main content when the drawer opens
+		// this has to be set after we add the Fragment
+		mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
         
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
@@ -60,6 +76,7 @@ public class DemoActivity extends SherlockFragmentActivity
             }
 
             public void onDrawerOpened(View drawerView) {
+            	mDrawerFragment.refresh();
                 getSupportActionBar().setTitle(mDrawerTitle);
             }
         };
@@ -120,12 +137,11 @@ public class DemoActivity extends SherlockFragmentActivity
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
     }
-    
+
 
 	@Override
-	public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
-		// Handle your drawer items onClick events...
-		
+	public int getSomeRandomInfoInIntegerForm() {
+		return mHomeFragment.getInt();
 	}
 
 }
